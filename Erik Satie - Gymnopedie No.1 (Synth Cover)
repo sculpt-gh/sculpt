@@ -1,0 +1,432 @@
+//Standard sample rate
+s.options.sampleRate = 44100;
+
+//Increase memory capacity
+s.options.memSize = 2.pow(20);
+
+
+o = Server.local.options;
+
+//16 output bus channels for JackRouter
+o.numOutputBusChannels = 16;
+
+//Connect JackRouter to SC
+s.options.device_("JackRouter");
+
+//To check if JackRouter is connected
+ServerOptions.devices;
+
+
+Server.killAll;
+s.boot;
+
+
+(
+SynthDef.new(\unison, {
+	arg attackTime=0.5, decayTime=0.05, sustainLevel=0.5, releaseTime=1, freq=50.0, amp, width, which, which2, which3, freqfilter, t_trig = 0, whichsig, whichsig2, whichsig3, whichsig4, whichmainsig, time, whichsub1, whichsub2, whichsubosc, whichnoise, noiseamp, whichlfo1, lfoval1, whichlfo2, whichunison, whichsigforunison, loFreq = 600, hiFreq = 4000, cent1, cent2, cent3, cent4, cent5, cent6, cent7, cent8, cent9, cent10, cent11, cent12, cent13, cent14, cent15, cent16, mainamp, lfoCycle, lfoFreq1, lfoFreq2, sus, gate=1, ampdist, smooth, freeze, out;
+	var env, envplot, selectsig, selectsig2, selectsig3, selectsig4, mainsig, selectfilter, selectfilter2, selectsubsig, selectsubsig2, whichsub, noise, amplfo, cutofflfo, voiceonea, voiceoneb, voiceonesubosc, voiceonesum, voicetwoa, voicetwob, voicetwosubosc, voicetwosum, twovoiceunison, voicethreea, voicethreeb, voicethreesubosc, voicethreesum, voicefoura, voicefourb, voicefoursubosc, voicefoursum, fourvoiceunison, voicefivea, voicefiveb, voicefivesubosc, voicefivesum, voicesixa, voicesixb, voicesixsubosc, voicesixsum, voicesevena, voicesevenb, voicesevensubosc, voicesevensum, voiceeighta, voiceeightb, voiceeightsubosc, voiceeightsum, eightvoiceunison, voiceninea, voicenineb, voiceninesubosc, voiceninesum, voicetena, voicetenb, voicetensubosc, voicetensum, voiceelevena, voiceelevenb, voiceelevensubosc, voiceelevensum, voicetwelvea, voicetwelveb, voicetwelvesubosc, voicetwelvesum, voicethirteena, voicethirteenb, voicethirteensubosc, voicethirteensum, voicefourteentha, voicefourteenthb, voicefourteenthsubosc, voicefourteenthsum, voicefifteentha, voicefifteenthb, voicefifteenthsubosc, voicefifteenthsum, voicesixteentha, voicesixteenthb, voicesixteenthsubosc, voicesixteenthsum, sixteenvoiceunison, unisonselect, binRange, loBin, hiBin, sig, chain, bufSize = 2048, centbank1, centbank2, centbank3, centbank4, centbank5, centbank6, centbank7, centbank8, centbank9, centbank10, centbank11, centbank12, centbank13, centbank14, centbank15, centbank16, legatofilter, legatoenv, envamp, dist, text;
+
+	// ENVELOPE MODULE
+	env = EnvGen.kr(Env([0, 1, 0.75, 0.75, 0], [attackTime, decayTime, sustainLevel, releaseTime]), t_trig, doneAction:2);
+
+	// NOISE SELECTION MODULE
+	noise = Select.ar(whichnoise,
+		[DC.ar(0),
+			WhiteNoise.ar(noiseamp),
+			PinkNoise.ar(noiseamp),
+			BrownNoise.ar(noiseamp),
+			GrayNoise.ar(noiseamp)]);
+
+	// CENT SELECTION
+	centbank1 = Select.kr(cent1, [DC.ar(0), ~pos1cents, ~pos2cents, ~pos3cents, ~pos4cents, ~pos5cents, ~pos6cents, ~pos7cents, ~pos8cents, ~pos9cents, ~pos10cents, ~pos11cents, ~pos12cents, ~pos13cents, ~pos14cents, ~pos15cents, ~pos16cents, ~pos17cents, ~pos18cents, ~pos19cents, ~pos20cents, ~pos21cents, ~pos22cents, ~pos23cents, ~pos24cents, ~pos25cents, ~pos26cents, ~pos27cents, ~pos28cents, ~pos29cents, ~pos30cents, ~pos31cents, ~pos32cents, ~pos33cents, ~pos34cents, ~pos35cents, ~pos36cents, ~pos37cents, ~pos38cents, ~pos39cents, ~pos40cents, ~pos41cents, ~pos42cents, ~pos43cents, ~pos44cents, ~pos45cents, ~pos46cents, ~pos47cents, ~pos48cents, ~pos49cents, ~pos50cents, ~pos51cents, ~pos52cents, ~pos53cents, ~pos54cents, ~pos55cents, ~pos56cents, ~pos57cents, ~pos58cents, ~pos59cents, ~pos60cents, ~pos61cents, ~pos62cents, ~pos63cents, ~pos64cents, ~pos65cents, ~pos66cents, ~pos67cents, ~pos68cents, ~pos69cents, ~pos70cents, ~pos71cents, ~pos72cents, ~pos73cents, ~pos74cents, ~pos75cents, ~pos76cents, ~pos77cents, ~pos78cents, ~pos79cents, ~pos80cents, ~pos81cents, ~pos82cents, ~pos83cents, ~pos84cents, ~pos85cents, ~pos86cents, ~pos87cents, ~pos88cents, ~pos89cents, ~pos90cents, ~pos91cents, ~pos92cents, ~pos93cents, ~pos94cents, ~pos95cents]);
+	centbank2 = Select.kr(cent2, [DC.ar(0), ~neg1cent, ~neg2cents, ~neg3cents, ~neg4cents, ~neg5cents, ~neg6cents, ~neg7cents, ~neg8cents, ~neg9cents, ~neg10cents, ~neg11cents, ~neg12cents, ~neg13cents, ~neg14cents, ~neg15cents, ~neg16cents, ~neg17cents, ~neg18cents, ~neg19cents, ~neg20cents, ~neg21cents, ~neg22cents, ~neg23cents, ~neg24cents, ~neg25cents, ~neg26cents, ~neg27cents, ~neg28cents, ~neg29cents, ~neg30cents, ~neg31cents, ~neg32cents, ~neg33cents, ~neg34cents, ~neg35cents, ~neg36cents, ~neg37cents, ~neg38cents, ~neg39cents, ~neg40cents, ~neg41cents, ~neg42cents, ~neg43cents, ~neg44cents, ~neg45cents, ~neg46cents, ~neg47cents, ~neg48cents, ~neg49cents, ~neg50cents, ~neg51cents, ~neg52cents, ~neg53cents, ~neg54cents, ~neg55cents, ~neg56cents, ~neg57cents, ~neg58cents, ~neg59cents, ~neg60cents, ~neg61cents, ~neg62cents, ~neg63cents, ~neg64cents, ~neg65cents, ~neg66cents, ~neg67cents, ~neg68cents, ~neg69cents, ~neg70cents, ~neg71cents, ~neg72cents, ~neg73cents, ~neg74cents, ~neg75cents, ~neg76cents, ~neg77cents, ~neg78cents, ~neg79cents, ~neg80cents, ~neg81cents, ~neg82cents, ~neg83cents, ~neg84cents, ~neg85cents, ~neg86cents, ~neg87cents, ~neg88cents, ~neg89cents, ~neg90cents, ~neg91cents, ~neg92cents, ~neg93cents, ~neg94cents, ~neg95cents]);
+	centbank3 = Select.kr(cent3, [DC.ar(0), ~pos1cents, ~pos2cents, ~pos3cents, ~pos4cents, ~pos5cents, ~pos6cents, ~pos7cents, ~pos8cents, ~pos9cents, ~pos10cents, ~pos11cents, ~pos12cents, ~pos13cents, ~pos14cents, ~pos15cents, ~pos16cents, ~pos17cents, ~pos18cents, ~pos19cents, ~pos20cents, ~pos21cents, ~pos22cents, ~pos23cents, ~pos24cents, ~pos25cents, ~pos26cents, ~pos27cents, ~pos28cents, ~pos29cents, ~pos30cents, ~pos31cents, ~pos32cents, ~pos33cents, ~pos34cents, ~pos35cents, ~pos36cents, ~pos37cents, ~pos38cents, ~pos39cents, ~pos40cents, ~pos41cents, ~pos42cents, ~pos43cents, ~pos44cents, ~pos45cents, ~pos46cents, ~pos47cents, ~pos48cents, ~pos49cents, ~pos50cents, ~pos51cents, ~pos52cents, ~pos53cents, ~pos54cents, ~pos55cents, ~pos56cents, ~pos57cents, ~pos58cents, ~pos59cents, ~pos60cents, ~pos61cents, ~pos62cents, ~pos63cents, ~pos64cents, ~pos65cents, ~pos66cents, ~pos67cents, ~pos68cents, ~pos69cents, ~pos70cents, ~pos71cents, ~pos72cents, ~pos73cents, ~pos74cents, ~pos75cents, ~pos76cents, ~pos77cents, ~pos78cents, ~pos79cents, ~pos80cents, ~pos81cents, ~pos82cents, ~pos83cents, ~pos84cents, ~pos85cents, ~pos86cents, ~pos87cents, ~pos88cents, ~pos89cents, ~pos90cents, ~pos91cents, ~pos92cents, ~pos93cents, ~pos94cents, ~pos95cents]);
+	centbank4 = Select.kr(cent4, [DC.ar(0), ~neg1cent, ~neg2cents, ~neg3cents, ~neg4cents, ~neg5cents, ~neg6cents, ~neg7cents, ~neg8cents, ~neg9cents, ~neg10cents, ~neg11cents, ~neg12cents, ~neg13cents, ~neg14cents, ~neg15cents, ~neg16cents, ~neg17cents, ~neg18cents, ~neg19cents, ~neg20cents, ~neg21cents, ~neg22cents, ~neg23cents, ~neg24cents, ~neg25cents, ~neg26cents, ~neg27cents, ~neg28cents, ~neg29cents, ~neg30cents, ~neg31cents, ~neg32cents, ~neg33cents, ~neg34cents, ~neg35cents, ~neg36cents, ~neg37cents, ~neg38cents, ~neg39cents, ~neg40cents, ~neg41cents, ~neg42cents, ~neg43cents, ~neg44cents, ~neg45cents, ~neg46cents, ~neg47cents, ~neg48cents, ~neg49cents, ~neg50cents, ~neg51cents, ~neg52cents, ~neg53cents, ~neg54cents, ~neg55cents, ~neg56cents, ~neg57cents, ~neg58cents, ~neg59cents, ~neg60cents, ~neg61cents, ~neg62cents, ~neg63cents, ~neg64cents, ~neg65cents, ~neg66cents, ~neg67cents, ~neg68cents, ~neg69cents, ~neg70cents, ~neg71cents, ~neg72cents, ~neg73cents, ~neg74cents, ~neg75cents, ~neg76cents, ~neg77cents, ~neg78cents, ~neg79cents, ~neg80cents, ~neg81cents, ~neg82cents, ~neg83cents, ~neg84cents, ~neg85cents, ~neg86cents, ~neg87cents, ~neg88cents, ~neg89cents, ~neg90cents, ~neg91cents, ~neg92cents, ~neg93cents, ~neg94cents, ~neg95cents]);
+	centbank5 = Select.kr(cent5, [DC.ar(0), ~pos1cents, ~pos2cents, ~pos3cents, ~pos4cents, ~pos5cents, ~pos6cents, ~pos7cents, ~pos8cents, ~pos9cents, ~pos10cents, ~pos11cents, ~pos12cents, ~pos13cents, ~pos14cents, ~pos15cents, ~pos16cents, ~pos17cents, ~pos18cents, ~pos19cents, ~pos20cents, ~pos21cents, ~pos22cents, ~pos23cents, ~pos24cents, ~pos25cents, ~pos26cents, ~pos27cents, ~pos28cents, ~pos29cents, ~pos30cents, ~pos31cents, ~pos32cents, ~pos33cents, ~pos34cents, ~pos35cents, ~pos36cents, ~pos37cents, ~pos38cents, ~pos39cents, ~pos40cents, ~pos41cents, ~pos42cents, ~pos43cents, ~pos44cents, ~pos45cents, ~pos46cents, ~pos47cents, ~pos48cents, ~pos49cents, ~pos50cents, ~pos51cents, ~pos52cents, ~pos53cents, ~pos54cents, ~pos55cents, ~pos56cents, ~pos57cents, ~pos58cents, ~pos59cents, ~pos60cents, ~pos61cents, ~pos62cents, ~pos63cents, ~pos64cents, ~pos65cents, ~pos66cents, ~pos67cents, ~pos68cents, ~pos69cents, ~pos70cents, ~pos71cents, ~pos72cents, ~pos73cents, ~pos74cents, ~pos75cents, ~pos76cents, ~pos77cents, ~pos78cents, ~pos79cents, ~pos80cents, ~pos81cents, ~pos82cents, ~pos83cents, ~pos84cents, ~pos85cents, ~pos86cents, ~pos87cents, ~pos88cents, ~pos89cents, ~pos90cents, ~pos91cents, ~pos92cents, ~pos93cents, ~pos94cents, ~pos95cents]);
+	centbank6 = Select.kr(cent6, [DC.ar(0), ~neg1cent, ~neg2cents, ~neg3cents, ~neg4cents, ~neg5cents, ~neg6cents, ~neg7cents, ~neg8cents, ~neg9cents, ~neg10cents, ~neg11cents, ~neg12cents, ~neg13cents, ~neg14cents, ~neg15cents, ~neg16cents, ~neg17cents, ~neg18cents, ~neg19cents, ~neg20cents, ~neg21cents, ~neg22cents, ~neg23cents, ~neg24cents, ~neg25cents, ~neg26cents, ~neg27cents, ~neg28cents, ~neg29cents, ~neg30cents, ~neg31cents, ~neg32cents, ~neg33cents, ~neg34cents, ~neg35cents, ~neg36cents, ~neg37cents, ~neg38cents, ~neg39cents, ~neg40cents, ~neg41cents, ~neg42cents, ~neg43cents, ~neg44cents, ~neg45cents, ~neg46cents, ~neg47cents, ~neg48cents, ~neg49cents, ~neg50cents, ~neg51cents, ~neg52cents, ~neg53cents, ~neg54cents, ~neg55cents, ~neg56cents, ~neg57cents, ~neg58cents, ~neg59cents, ~neg60cents, ~neg61cents, ~neg62cents, ~neg63cents, ~neg64cents, ~neg65cents, ~neg66cents, ~neg67cents, ~neg68cents, ~neg69cents, ~neg70cents, ~neg71cents, ~neg72cents, ~neg73cents, ~neg74cents, ~neg75cents, ~neg76cents, ~neg77cents, ~neg78cents, ~neg79cents, ~neg80cents, ~neg81cents, ~neg82cents, ~neg83cents, ~neg84cents, ~neg85cents, ~neg86cents, ~neg87cents, ~neg88cents, ~neg89cents, ~neg90cents, ~neg91cents, ~neg92cents, ~neg93cents, ~neg94cents, ~neg95cents]);
+	centbank7 = Select.kr(cent7, [DC.ar(0), ~pos1cents, ~pos2cents, ~pos3cents, ~pos4cents, ~pos5cents, ~pos6cents, ~pos7cents, ~pos8cents, ~pos9cents, ~pos10cents, ~pos11cents, ~pos12cents, ~pos13cents, ~pos14cents, ~pos15cents, ~pos16cents, ~pos17cents, ~pos18cents, ~pos19cents, ~pos20cents, ~pos21cents, ~pos22cents, ~pos23cents, ~pos24cents, ~pos25cents, ~pos26cents, ~pos27cents, ~pos28cents, ~pos29cents, ~pos30cents, ~pos31cents, ~pos32cents, ~pos33cents, ~pos34cents, ~pos35cents, ~pos36cents, ~pos37cents, ~pos38cents, ~pos39cents, ~pos40cents, ~pos41cents, ~pos42cents, ~pos43cents, ~pos44cents, ~pos45cents, ~pos46cents, ~pos47cents, ~pos48cents, ~pos49cents, ~pos50cents, ~pos51cents, ~pos52cents, ~pos53cents, ~pos54cents, ~pos55cents, ~pos56cents, ~pos57cents, ~pos58cents, ~pos59cents, ~pos60cents, ~pos61cents, ~pos62cents, ~pos63cents, ~pos64cents, ~pos65cents, ~pos66cents, ~pos67cents, ~pos68cents, ~pos69cents, ~pos70cents, ~pos71cents, ~pos72cents, ~pos73cents, ~pos74cents, ~pos75cents, ~pos76cents, ~pos77cents, ~pos78cents, ~pos79cents, ~pos80cents, ~pos81cents, ~pos82cents, ~pos83cents, ~pos84cents, ~pos85cents, ~pos86cents, ~pos87cents, ~pos88cents, ~pos89cents, ~pos90cents, ~pos91cents, ~pos92cents, ~pos93cents, ~pos94cents, ~pos95cents]);
+	centbank8 = Select.kr(cent8, [DC.ar(0), ~neg1cent, ~neg2cents, ~neg3cents, ~neg4cents, ~neg5cents, ~neg6cents, ~neg7cents, ~neg8cents, ~neg9cents, ~neg10cents, ~neg11cents, ~neg12cents, ~neg13cents, ~neg14cents, ~neg15cents, ~neg16cents, ~neg17cents, ~neg18cents, ~neg19cents, ~neg20cents, ~neg21cents, ~neg22cents, ~neg23cents, ~neg24cents, ~neg25cents, ~neg26cents, ~neg27cents, ~neg28cents, ~neg29cents, ~neg30cents, ~neg31cents, ~neg32cents, ~neg33cents, ~neg34cents, ~neg35cents, ~neg36cents, ~neg37cents, ~neg38cents, ~neg39cents, ~neg40cents, ~neg41cents, ~neg42cents, ~neg43cents, ~neg44cents, ~neg45cents, ~neg46cents, ~neg47cents, ~neg48cents, ~neg49cents, ~neg50cents, ~neg51cents, ~neg52cents, ~neg53cents, ~neg54cents, ~neg55cents, ~neg56cents, ~neg57cents, ~neg58cents, ~neg59cents, ~neg60cents, ~neg61cents, ~neg62cents, ~neg63cents, ~neg64cents, ~neg65cents, ~neg66cents, ~neg67cents, ~neg68cents, ~neg69cents, ~neg70cents, ~neg71cents, ~neg72cents, ~neg73cents, ~neg74cents, ~neg75cents, ~neg76cents, ~neg77cents, ~neg78cents, ~neg79cents, ~neg80cents, ~neg81cents, ~neg82cents, ~neg83cents, ~neg84cents, ~neg85cents, ~neg86cents, ~neg87cents, ~neg88cents, ~neg89cents, ~neg90cents, ~neg91cents, ~neg92cents, ~neg93cents, ~neg94cents, ~neg95cents]);
+	centbank9 = Select.kr(cent9, [DC.ar(0), ~pos1cents, ~pos2cents, ~pos3cents, ~pos4cents, ~pos5cents, ~pos6cents, ~pos7cents, ~pos8cents, ~pos9cents, ~pos10cents, ~pos11cents, ~pos12cents, ~pos13cents, ~pos14cents, ~pos15cents, ~pos16cents, ~pos17cents, ~pos18cents, ~pos19cents, ~pos20cents, ~pos21cents, ~pos22cents, ~pos23cents, ~pos24cents, ~pos25cents, ~pos26cents, ~pos27cents, ~pos28cents, ~pos29cents, ~pos30cents, ~pos31cents, ~pos32cents, ~pos33cents, ~pos34cents, ~pos35cents, ~pos36cents, ~pos37cents, ~pos38cents, ~pos39cents, ~pos40cents, ~pos41cents, ~pos42cents, ~pos43cents, ~pos44cents, ~pos45cents, ~pos46cents, ~pos47cents, ~pos48cents, ~pos49cents, ~pos50cents, ~pos51cents, ~pos52cents, ~pos53cents, ~pos54cents, ~pos55cents, ~pos56cents, ~pos57cents, ~pos58cents, ~pos59cents, ~pos60cents, ~pos61cents, ~pos62cents, ~pos63cents, ~pos64cents, ~pos65cents, ~pos66cents, ~pos67cents, ~pos68cents, ~pos69cents, ~pos70cents, ~pos71cents, ~pos72cents, ~pos73cents, ~pos74cents, ~pos75cents, ~pos76cents, ~pos77cents, ~pos78cents, ~pos79cents, ~pos80cents, ~pos81cents, ~pos82cents, ~pos83cents, ~pos84cents, ~pos85cents, ~pos86cents, ~pos87cents, ~pos88cents, ~pos89cents, ~pos90cents, ~pos91cents, ~pos92cents, ~pos93cents, ~pos94cents, ~pos95cents]);
+	centbank10 = Select.kr(cent10, [DC.ar(0), ~neg1cent, ~neg2cents, ~neg3cents, ~neg4cents, ~neg5cents, ~neg6cents, ~neg7cents, ~neg8cents, ~neg9cents, ~neg10cents, ~neg11cents, ~neg12cents, ~neg13cents, ~neg14cents, ~neg15cents, ~neg16cents, ~neg17cents, ~neg18cents, ~neg19cents, ~neg20cents, ~neg21cents, ~neg22cents, ~neg23cents, ~neg24cents, ~neg25cents, ~neg26cents, ~neg27cents, ~neg28cents, ~neg29cents, ~neg30cents, ~neg31cents, ~neg32cents, ~neg33cents, ~neg34cents, ~neg35cents, ~neg36cents, ~neg37cents, ~neg38cents, ~neg39cents, ~neg40cents, ~neg41cents, ~neg42cents, ~neg43cents, ~neg44cents, ~neg45cents, ~neg46cents, ~neg47cents, ~neg48cents, ~neg49cents, ~neg50cents, ~neg51cents, ~neg52cents, ~neg53cents, ~neg54cents, ~neg55cents, ~neg56cents, ~neg57cents, ~neg58cents, ~neg59cents, ~neg60cents, ~neg61cents, ~neg62cents, ~neg63cents, ~neg64cents, ~neg65cents, ~neg66cents, ~neg67cents, ~neg68cents, ~neg69cents, ~neg70cents, ~neg71cents, ~neg72cents, ~neg73cents, ~neg74cents, ~neg75cents, ~neg76cents, ~neg77cents, ~neg78cents, ~neg79cents, ~neg80cents, ~neg81cents, ~neg82cents, ~neg83cents, ~neg84cents, ~neg85cents, ~neg86cents, ~neg87cents, ~neg88cents, ~neg89cents, ~neg90cents, ~neg91cents, ~neg92cents, ~neg93cents, ~neg94cents, ~neg95cents]);
+	centbank11 = Select.kr(cent11, [DC.ar(0), ~pos1cents, ~pos2cents, ~pos3cents, ~pos4cents, ~pos5cents, ~pos6cents, ~pos7cents, ~pos8cents, ~pos9cents, ~pos10cents, ~pos11cents, ~pos12cents, ~pos13cents, ~pos14cents, ~pos15cents, ~pos16cents, ~pos17cents, ~pos18cents, ~pos19cents, ~pos20cents, ~pos21cents, ~pos22cents, ~pos23cents, ~pos24cents, ~pos25cents, ~pos26cents, ~pos27cents, ~pos28cents, ~pos29cents, ~pos30cents, ~pos31cents, ~pos32cents, ~pos33cents, ~pos34cents, ~pos35cents, ~pos36cents, ~pos37cents, ~pos38cents, ~pos39cents, ~pos40cents, ~pos41cents, ~pos42cents, ~pos43cents, ~pos44cents, ~pos45cents, ~pos46cents, ~pos47cents, ~pos48cents, ~pos49cents, ~pos50cents, ~pos51cents, ~pos52cents, ~pos53cents, ~pos54cents, ~pos55cents, ~pos56cents, ~pos57cents, ~pos58cents, ~pos59cents, ~pos60cents, ~pos61cents, ~pos62cents, ~pos63cents, ~pos64cents, ~pos65cents, ~pos66cents, ~pos67cents, ~pos68cents, ~pos69cents, ~pos70cents, ~pos71cents, ~pos72cents, ~pos73cents, ~pos74cents, ~pos75cents, ~pos76cents, ~pos77cents, ~pos78cents, ~pos79cents, ~pos80cents, ~pos81cents, ~pos82cents, ~pos83cents, ~pos84cents, ~pos85cents, ~pos86cents, ~pos87cents, ~pos88cents, ~pos89cents, ~pos90cents, ~pos91cents, ~pos92cents, ~pos93cents, ~pos94cents, ~pos95cents]);
+	centbank12 = Select.kr(cent12, [DC.ar(0), ~neg1cent, ~neg2cents, ~neg3cents, ~neg4cents, ~neg5cents, ~neg6cents, ~neg7cents, ~neg8cents, ~neg9cents, ~neg10cents, ~neg11cents, ~neg12cents, ~neg13cents, ~neg14cents, ~neg15cents, ~neg16cents, ~neg17cents, ~neg18cents, ~neg19cents, ~neg20cents, ~neg21cents, ~neg22cents, ~neg23cents, ~neg24cents, ~neg25cents, ~neg26cents, ~neg27cents, ~neg28cents, ~neg29cents, ~neg30cents, ~neg31cents, ~neg32cents, ~neg33cents, ~neg34cents, ~neg35cents, ~neg36cents, ~neg37cents, ~neg38cents, ~neg39cents, ~neg40cents, ~neg41cents, ~neg42cents, ~neg43cents, ~neg44cents, ~neg45cents, ~neg46cents, ~neg47cents, ~neg48cents, ~neg49cents, ~neg50cents, ~neg51cents, ~neg52cents, ~neg53cents, ~neg54cents, ~neg55cents, ~neg56cents, ~neg57cents, ~neg58cents, ~neg59cents, ~neg60cents, ~neg61cents, ~neg62cents, ~neg63cents, ~neg64cents, ~neg65cents, ~neg66cents, ~neg67cents, ~neg68cents, ~neg69cents, ~neg70cents, ~neg71cents, ~neg72cents, ~neg73cents, ~neg74cents, ~neg75cents, ~neg76cents, ~neg77cents, ~neg78cents, ~neg79cents, ~neg80cents, ~neg81cents, ~neg82cents, ~neg83cents, ~neg84cents, ~neg85cents, ~neg86cents, ~neg87cents, ~neg88cents, ~neg89cents, ~neg90cents, ~neg91cents, ~neg92cents, ~neg93cents, ~neg94cents, ~neg95cents]);
+	centbank13 = Select.kr(cent13, [DC.ar(0), ~pos1cents, ~pos2cents, ~pos3cents, ~pos4cents, ~pos5cents, ~pos6cents, ~pos7cents, ~pos8cents, ~pos9cents, ~pos10cents, ~pos11cents, ~pos12cents, ~pos13cents, ~pos14cents, ~pos15cents, ~pos16cents, ~pos17cents, ~pos18cents, ~pos19cents, ~pos20cents, ~pos21cents, ~pos22cents, ~pos23cents, ~pos24cents, ~pos25cents, ~pos26cents, ~pos27cents, ~pos28cents, ~pos29cents, ~pos30cents, ~pos31cents, ~pos32cents, ~pos33cents, ~pos34cents, ~pos35cents, ~pos36cents, ~pos37cents, ~pos38cents, ~pos39cents, ~pos40cents, ~pos41cents, ~pos42cents, ~pos43cents, ~pos44cents, ~pos45cents, ~pos46cents, ~pos47cents, ~pos48cents, ~pos49cents, ~pos50cents, ~pos51cents, ~pos52cents, ~pos53cents, ~pos54cents, ~pos55cents, ~pos56cents, ~pos57cents, ~pos58cents, ~pos59cents, ~pos60cents, ~pos61cents, ~pos62cents, ~pos63cents, ~pos64cents, ~pos65cents, ~pos66cents, ~pos67cents, ~pos68cents, ~pos69cents, ~pos70cents, ~pos71cents, ~pos72cents, ~pos73cents, ~pos74cents, ~pos75cents, ~pos76cents, ~pos77cents, ~pos78cents, ~pos79cents, ~pos80cents, ~pos81cents, ~pos82cents, ~pos83cents, ~pos84cents, ~pos85cents, ~pos86cents, ~pos87cents, ~pos88cents, ~pos89cents, ~pos90cents, ~pos91cents, ~pos92cents, ~pos93cents, ~pos94cents, ~pos95cents]);
+	centbank14 = Select.kr(cent14, [DC.ar(0), ~neg1cent, ~neg2cents, ~neg3cents, ~neg4cents, ~neg5cents, ~neg6cents, ~neg7cents, ~neg8cents, ~neg9cents, ~neg10cents, ~neg11cents, ~neg12cents, ~neg13cents, ~neg14cents, ~neg15cents, ~neg16cents, ~neg17cents, ~neg18cents, ~neg19cents, ~neg20cents, ~neg21cents, ~neg22cents, ~neg23cents, ~neg24cents, ~neg25cents, ~neg26cents, ~neg27cents, ~neg28cents, ~neg29cents, ~neg30cents, ~neg31cents, ~neg32cents, ~neg33cents, ~neg34cents, ~neg35cents, ~neg36cents, ~neg37cents, ~neg38cents, ~neg39cents, ~neg40cents, ~neg41cents, ~neg42cents, ~neg43cents, ~neg44cents, ~neg45cents, ~neg46cents, ~neg47cents, ~neg48cents, ~neg49cents, ~neg50cents, ~neg51cents, ~neg52cents, ~neg53cents, ~neg54cents, ~neg55cents, ~neg56cents, ~neg57cents, ~neg58cents, ~neg59cents, ~neg60cents, ~neg61cents, ~neg62cents, ~neg63cents, ~neg64cents, ~neg65cents, ~neg66cents, ~neg67cents, ~neg68cents, ~neg69cents, ~neg70cents, ~neg71cents, ~neg72cents, ~neg73cents, ~neg74cents, ~neg75cents, ~neg76cents, ~neg77cents, ~neg78cents, ~neg79cents, ~neg80cents, ~neg81cents, ~neg82cents, ~neg83cents, ~neg84cents, ~neg85cents, ~neg86cents, ~neg87cents, ~neg88cents, ~neg89cents, ~neg90cents, ~neg91cents, ~neg92cents, ~neg93cents, ~neg94cents, ~neg95cents]);
+	centbank15 = Select.kr(cent15, [DC.ar(0), ~pos1cents, ~pos2cents, ~pos3cents, ~pos4cents, ~pos5cents, ~pos6cents, ~pos7cents, ~pos8cents, ~pos9cents, ~pos10cents, ~pos11cents, ~pos12cents, ~pos13cents, ~pos14cents, ~pos15cents, ~pos16cents, ~pos17cents, ~pos18cents, ~pos19cents, ~pos20cents, ~pos21cents, ~pos22cents, ~pos23cents, ~pos24cents, ~pos25cents, ~pos26cents, ~pos27cents, ~pos28cents, ~pos29cents, ~pos30cents, ~pos31cents, ~pos32cents, ~pos33cents, ~pos34cents, ~pos35cents, ~pos36cents, ~pos37cents, ~pos38cents, ~pos39cents, ~pos40cents, ~pos41cents, ~pos42cents, ~pos43cents, ~pos44cents, ~pos45cents, ~pos46cents, ~pos47cents, ~pos48cents, ~pos49cents, ~pos50cents, ~pos51cents, ~pos52cents, ~pos53cents, ~pos54cents, ~pos55cents, ~pos56cents, ~pos57cents, ~pos58cents, ~pos59cents, ~pos60cents, ~pos61cents, ~pos62cents, ~pos63cents, ~pos64cents, ~pos65cents, ~pos66cents, ~pos67cents, ~pos68cents, ~pos69cents, ~pos70cents, ~pos71cents, ~pos72cents, ~pos73cents, ~pos74cents, ~pos75cents, ~pos76cents, ~pos77cents, ~pos78cents, ~pos79cents, ~pos80cents, ~pos81cents, ~pos82cents, ~pos83cents, ~pos84cents, ~pos85cents, ~pos86cents, ~pos87cents, ~pos88cents, ~pos89cents, ~pos90cents, ~pos91cents, ~pos92cents, ~pos93cents, ~pos94cents, ~pos95cents]);
+	centbank16 = Select.kr(cent16, [DC.ar(0), ~neg1cent, ~neg2cents, ~neg3cents, ~neg4cents, ~neg5cents, ~neg6cents, ~neg7cents, ~neg8cents, ~neg9cents, ~neg10cents, ~neg11cents, ~neg12cents, ~neg13cents, ~neg14cents, ~neg15cents, ~neg16cents, ~neg17cents, ~neg18cents, ~neg19cents, ~neg20cents, ~neg21cents, ~neg22cents, ~neg23cents, ~neg24cents, ~neg25cents, ~neg26cents, ~neg27cents, ~neg28cents, ~neg29cents, ~neg30cents, ~neg31cents, ~neg32cents, ~neg33cents, ~neg34cents, ~neg35cents, ~neg36cents, ~neg37cents, ~neg38cents, ~neg39cents, ~neg40cents, ~neg41cents, ~neg42cents, ~neg43cents, ~neg44cents, ~neg45cents, ~neg46cents, ~neg47cents, ~neg48cents, ~neg49cents, ~neg50cents, ~neg51cents, ~neg52cents, ~neg53cents, ~neg54cents, ~neg55cents, ~neg56cents, ~neg57cents, ~neg58cents, ~neg59cents, ~neg60cents, ~neg61cents, ~neg62cents, ~neg63cents, ~neg64cents, ~neg65cents, ~neg66cents, ~neg67cents, ~neg68cents, ~neg69cents, ~neg70cents, ~neg71cents, ~neg72cents, ~neg73cents, ~neg74cents, ~neg75cents, ~neg76cents, ~neg77cents, ~neg78cents, ~neg79cents, ~neg80cents, ~neg81cents, ~neg82cents, ~neg83cents, ~neg84cents, ~neg85cents, ~neg86cents, ~neg87cents, ~neg88cents, ~neg89cents, ~neg90cents, ~neg91cents, ~neg92cents, ~neg93cents, ~neg94cents, ~neg95cents]);
+
+	// 2 VOICE UNISON
+	voiceonea = Select.ar(whichsigforunison, [Saw.ar(centbank1*freq, amp), Pulse.ar(centbank1*freq, width, amp)]);
+	voiceoneb = Select.ar(whichsigforunison, [Saw.ar(centbank1*freq, amp), Pulse.ar(centbank1*freq, width, amp)]);
+	voiceonesubosc = Select.ar(whichsigforunison, [Saw.ar(centbank1*freq/2, amp), Pulse.ar(centbank1*freq/2, width, amp)]);
+	voiceonesum = voiceonea + voiceoneb + voiceonesubosc;
+	voiceonesum = Pan2.ar(voiceonesum, Saw.kr(1).range(-0.8, -0.1));
+
+	voicetwoa = Select.ar(whichsigforunison, [Saw.ar(centbank2*freq, amp), Pulse.ar(centbank2*freq, width, amp)]);
+	voicetwob = Select.ar(whichsigforunison, [Saw.ar(centbank2*freq, amp), Pulse.ar(centbank2*freq, width, amp)]);
+	voicetwosubosc = Select.ar(whichsigforunison, [Saw.ar(centbank2*freq/2, amp), Pulse.ar(centbank2*freq/2, width, amp)]);
+	voicetwosum = voicetwoa + voicetwob + voicetwosubosc;
+	voicetwosum = Pan2.ar(voicetwosum, Saw.kr(0.8).range(-0.1, 0.5));
+
+	twovoiceunison = voiceonesum + voicetwosum + noise;
+
+	// 4 VOICE UNISON
+	voicethreea = Select.ar(whichsigforunison, [Saw.ar(centbank3*freq, amp), Pulse.ar(centbank3*freq, width, amp)]);
+	voicethreeb = Select.ar(whichsigforunison, [Saw.ar(centbank3*freq, amp), Pulse.ar(centbank3*freq, width, amp)]);
+	voicethreesubosc = Select.ar(whichsigforunison, [Saw.ar(centbank3*freq/2, amp), Pulse.ar(centbank3*freq/2, width, amp)]);
+	voicethreesum = voicethreea + voicethreeb + voicethreesubosc;
+
+	voicefoura = Select.ar(whichsigforunison, [Saw.ar(centbank4*freq, amp), Pulse.ar(centbank4*freq, width, amp)]);
+	voicefourb = Select.ar(whichsigforunison, [Saw.ar(centbank4*freq, amp), Pulse.ar(centbank4*freq, width, amp)]);
+	voicefoursubosc = Select.ar(whichsigforunison, [Saw.ar(centbank4*freq/2, amp), Pulse.ar(centbank4*freq/2, width, amp)]);
+	voicefoursum = voicefoura + voicefourb + voicefoursubosc;
+
+	fourvoiceunison = voiceonesum + voicetwosum + voicethreesum + voicefoursum + noise;
+
+	// 8 VOICE UNISON
+	voicefivea = Select.ar(whichsigforunison, [Saw.ar(centbank5*freq, amp), Pulse.ar(centbank5*freq, width, amp)]);
+	voicefiveb = Select.ar(whichsigforunison, [Saw.ar(centbank5*freq, amp), Pulse.ar(centbank5*freq, width, amp)]);
+	voicefivesubosc = Select.ar(whichsigforunison, [Saw.ar(centbank5*freq/2, amp), Pulse.ar(centbank5*freq/2, width, amp)]);
+	voicefivesum = voicefivea + voicefiveb + voicefivesubosc;
+
+	voicesixa = Select.ar(whichsigforunison, [Saw.ar(centbank6*freq, amp), Pulse.ar(centbank6*freq, width, amp)]);
+	voicesixb = Select.ar(whichsigforunison, [Saw.ar(centbank6*freq, amp), Pulse.ar(centbank6*freq, width, amp)]);
+	voicesixsubosc = Select.ar(whichsigforunison, [Saw.ar(centbank6*freq/2, amp), Pulse.ar(centbank6*freq/2, width, amp)]);
+	voicesixsum = voicesixa + voicesixb + voicesixsubosc;
+
+	voicesevena = Select.ar(whichsigforunison, [Saw.ar(centbank7*freq, amp), Pulse.ar(centbank7*freq, width, amp)]);
+	voicesevenb = Select.ar(whichsigforunison, [Saw.ar(centbank7*freq, amp), Pulse.ar(centbank7*freq, width, amp)]);
+	voicesevensubosc = Select.ar(whichsigforunison, [Saw.ar(centbank7*freq/2, amp), Pulse.ar(centbank7*freq/2, width, amp)]);
+	voicesevensum = voicesevena + voicesevenb + voicesevensubosc;
+
+	voiceeighta = Select.ar(whichsigforunison, [Saw.ar(centbank8*freq, amp), Pulse.ar(centbank8*freq, width, amp)]);
+	voiceeightb = Select.ar(whichsigforunison, [Saw.ar(centbank8*freq, amp), Pulse.ar(centbank8*freq, width, amp)]);
+	voiceeightsubosc = Select.ar(whichsigforunison, [Saw.ar(centbank8*freq/2, amp), Pulse.ar(centbank8*freq/2, width, amp)]);
+	voiceeightsum = voiceeighta + voiceeightb + voiceeightsubosc;
+
+	eightvoiceunison = voiceonesum + voicetwosum + voicethreesum + voicefoursum + voicefivesum + voicesixsum + voicesevensum + voiceeightsum + noise;
+
+	// 16 VOICE UNISON
+	voiceninea = Select.ar(whichsigforunison, [Saw.ar(centbank9*freq, amp), Pulse.ar(centbank9*freq, width, amp)]);
+	voicenineb = Select.ar(whichsigforunison, [Saw.ar(centbank9*freq, amp), Pulse.ar(centbank9*freq, width, amp)]);
+	voiceninesubosc = Select.ar(whichsigforunison, [Saw.ar(centbank9*freq/2, amp), Pulse.ar(centbank9*freq/2, width, amp)]);
+	voiceninesum = voiceninea + voicenineb + voiceninesubosc;
+
+	voicetena = Select.ar(whichsigforunison, [Saw.ar(centbank10*freq, amp), Pulse.ar(centbank10*freq, width, amp)]);
+	voicetenb = Select.ar(whichsigforunison, [Saw.ar(centbank10*freq, amp), Pulse.ar(centbank10*freq, width, amp)]);
+	voicetensubosc = Select.ar(whichsigforunison, [Saw.ar(centbank10*freq/2, amp), Pulse.ar(centbank10*freq/2, width, amp)]);
+	voicetensum = voicetena + voicetenb + voicetensubosc;
+
+	voiceelevena = Select.ar(whichsigforunison, [Saw.ar(centbank11*freq, amp), Pulse.ar(centbank11*freq, width, amp)]);
+	voiceelevenb = Select.ar(whichsigforunison, [Saw.ar(centbank11*freq, amp), Pulse.ar(centbank11*freq, width, amp)]);
+	voiceelevensubosc = Select.ar(whichsigforunison, [Saw.ar(centbank11*freq/2, amp), Pulse.ar(centbank11*freq/2, width, amp)]);
+	voiceelevensum = voiceelevena + voiceelevenb + voiceelevensubosc;
+
+	voicetwelvea = Select.ar(whichsigforunison, [Saw.ar(centbank12*freq, amp), Pulse.ar(centbank12*freq, width, amp)]);
+	voicetwelveb = Select.ar(whichsigforunison, [Saw.ar(centbank12*freq, amp), Pulse.ar(centbank12*freq, width, amp)]);
+	voicetwelvesubosc = Select.ar(whichsigforunison, [Saw.ar(centbank12*freq/2, amp), Pulse.ar(centbank12*freq/2, width, amp)]);
+	voicetwelvesum = voicetwelvea + voicetwelveb + voicetwelvesubosc;
+
+	voicethirteena = Select.ar(whichsigforunison, [Saw.ar(centbank13*freq, amp), Pulse.ar(centbank13*freq, width, amp)]);
+	voicethirteenb = Select.ar(whichsigforunison, [Saw.ar(centbank13*freq, amp), Pulse.ar(centbank13*freq, width, amp)]);
+	voicethirteensubosc = Select.ar(whichsigforunison, [Saw.ar(centbank13*freq/2, amp), Pulse.ar(centbank13*freq/2, width, amp)]);
+	voicethirteensum = voicethirteena + voicethirteenb + voicethirteensubosc;
+
+	voicefourteentha = Select.ar(whichsigforunison, [Saw.ar(centbank14*freq, amp), Pulse.ar(centbank14*freq, width, amp)]);
+	voicefourteenthb = Select.ar(whichsigforunison, [Saw.ar(centbank14*freq, amp), Pulse.ar(centbank14*freq, width, amp)]);
+	voicefourteenthsubosc = Select.ar(whichsigforunison, [Saw.ar(centbank14*freq/2, amp), Pulse.ar(centbank14*freq/2, width, amp)]);
+	voicefourteenthsum = voicefourteentha + voicefourteenthb + voicefourteenthsubosc;
+
+	voicefifteentha = Select.ar(whichsigforunison, [Saw.ar(centbank15*freq, amp), Pulse.ar(centbank15*freq, width, amp)]);
+	voicefifteenthb = Select.ar(whichsigforunison, [Saw.ar(centbank15*freq, amp), Pulse.ar(centbank15*freq, width, amp)]);
+	voicefifteenthsubosc = Select.ar(whichsigforunison, [Saw.ar(centbank15*freq/2, amp), Pulse.ar(centbank15*freq/2, width, amp)]);
+	voicefifteenthsum = voicefifteentha + voicefifteenthb + voicefifteenthsubosc;
+
+	voicesixteentha = Select.ar(whichsigforunison, [Saw.ar(centbank16*freq, amp), Pulse.ar(centbank16*freq, width, amp)]);
+	voicesixteenthb = Select.ar(whichsigforunison, [Saw.ar(centbank16*freq, amp), Pulse.ar(centbank16*freq, width, amp)]);
+	voicesixteenthsubosc = Select.ar(whichsigforunison, [Saw.ar(centbank16*freq/2, amp), Pulse.ar(centbank16*freq/2, width, amp)]);
+	voicesixteenthsum = voicesixteentha + voicesixteenthb + voicesixteenthsubosc;
+
+	sixteenvoiceunison = voiceonesum + voicetwosum + voicethreesum + voicefoursum + voicefivesum + voicesixsum + voicesevensum + voiceeightsum + voiceninesum + voicetensum + voiceelevensum + voicetwelvesum + voicethirteensum + 	voicefourteenthsum +  voicefifteenthsum + voicesixteenthsum + noise;
+
+
+	// UNISON SELECTION
+	unisonselect = Select.ar(whichunison, [twovoiceunison, fourvoiceunison, eightvoiceunison, sixteenvoiceunison]);
+
+	// LFO MODULE - AMPLITUDE
+	amplfo = unisonselect*Select.ar(whichlfo1,
+		[DC.ar(0),
+			LFSaw.ar(lfoval1, 0, 0.6),
+			LFTri.ar(lfoval1),
+			LFPulse.ar(lfoval1),
+			SinOsc.ar(lfoval1)]);
+
+	// LFO MODULE - CUTOFF
+	cutofflfo = Select.ar(whichlfo2,
+		[DC.ar(0),
+			BLowPass.ar(unisonselect, LFTri.kr(lfoCycle, 0, lfoFreq1, 2040)),
+			BHiPass.ar(unisonselect, LFTri.kr(1, 0, 2000, 2040)),
+			BBandPass.ar(unisonselect, LFTri.kr(1, 0, 2000, 2040))]);
+
+	// FILTER MODULE
+	// FILTER SELECTION
+	selectfilter = Select.ar(which2,
+		[unisonselect,
+		    BLowPass.ar(unisonselect, freqfilter),
+		    BHiPass.ar(unisonselect, freqfilter),
+		    BBandPass.ar(unisonselect, freqfilter)]);
+
+	// FILTER ENVELOPE
+	selectfilter2 = Select.ar(which3,
+	 [unisonselect,
+		BLowPass.ar(unisonselect, Line.ar(100, 3000, 2.5)),
+		BHiPass.ar(unisonselect, EnvGen.kr(Env([5000, 100], [time]))),
+		BBandPass.ar(unisonselect, EnvGen.kr(Env([100, 5000], [time])))]);
+
+	mainsig = Select.ar(whichmainsig, [unisonselect, amplfo, cutofflfo, selectfilter, selectfilter2]);
+
+	dist = CrossoverDistortion.ar(mainsig, ampdist, smooth);
+
+	chain = FFT(LocalBuf(bufSize), dist);
+	chain = PV_MagFreeze(chain, MouseY.kr > 0.98);
+	Out.ar(out, env*IFFT(chain)!2*mainamp);
+}).load;
+)
+
+
+
+(
+~gymno1 = Ppar([
+~synthrhythm = Pbind(
+	\instrument, \unison,
+	\freq, Pseq([
+			Pseq([~g2, [~b3, ~d4, ~fsharp4], ~d2, [~a3, ~csharp4, ~fsharp4], ~g2, [~b3, ~d4, ~fsharp4], ~d2, [~a3, ~csharp4, ~fsharp4], ~g2, [~b3, ~d4, ~fsharp4]], 1),  // Line 1
+			Pseq([~d2, [~a3, ~csharp4, ~fsharp4], ~g2, [~b3, ~d4, ~fsharp4], ~d2, [~a3, ~csharp4, ~fsharp4], ~g2, [~b3, ~d4, ~fsharp4], ~d2, [~a3, ~csharp4, ~fsharp4]], 1), // Line 2
+			Pseq([~g2, [~b3, ~d4, ~fsharp4], ~d2, [~a3, ~csharp4, ~fsharp4], ~g2, [~b3, ~d4, ~fsharp4], ~d2, [~a3, ~csharp4, ~fsharp4], ~g2, [~b3, ~d4, ~fsharp4]], 1), // Line 3
+			Pseq([~d2, [~a3, ~csharp4, ~fsharp4], ~fsharp2, [~a3, ~csharp4, ~fsharp4], ~b1, [~b3, ~d4, ~fsharp4], [~e2, ~e4], [~g3, ~b3], [~e2, ~e4], [~b3, ~d4, ~g4]], 1), // Line 4
+			Pseq([~d2, [~f3, ~a3, ~d4], ~a1, [~a3, ~c4, ~e4], ~d2, [~g3, ~b3, ~e4], ~d2, [~d3, ~g3, ~b3, ~e4], ~d2, [~c3, ~e3, ~a3, ~d4]], 1), // Line 5
+			Pseq([~d2, [~c3, ~fsharp3, ~a3, ~d4], ~d2, [~a3, ~c4, ~f4], ~d2, [~a3, ~c4, ~e4], ~d2, [~d3, ~g3, ~b3, ~e4], ~d2, [~c3, ~e3, ~a3, ~d4]], 1), // Line 6
+		    Pseq([~d2, [~c3, ~fsharp3, ~a3, ~d4], ~e2, [~b3, ~e4, ~g4], ~fsharp2, [~a3, ~csharp4, ~fsharp4], ~b1, [~b3, ~d4, ~fsharp4], ~e2, [~csharp4, ~e4, ~a4]], 1), // Line 7
+			Pseq([~e2, [~a3, ~csharp4, ~fsharp4, ~a4], ~e2, [~b2, ~a3, ~d4], [~e3, ~b3, ~d4, ~g4], [~a2, ~g3], [~d3, ~a2, ~d2], ~g2, [~b3, ~d4, ~fsharp4]], 1), // Line 8
+			Pseq([~d2, [~a3, ~csharp4, ~fsharp4], ~g2, [~b3, ~d4, ~fsharp4], ~d2, [~a3, ~csharp4, ~fsharp4], ~g2, [~b3, ~d4, ~fsharp4], ~d2, [~a3, ~csharp4, ~fsharp4]], 1), // Line 9
+			Pseq([~g2, [~b3, ~d4, ~fsharp4], ~d2, [~a3, ~csharp4, ~fsharp4], ~g2, [~b3, ~d4, ~fsharp4], ~d2, [~a3, ~csharp4, ~fsharp4], ~g2, [~b3, ~d4, ~fsharp4], ~d2, [~a3, ~csharp4, ~fsharp4]], 1), // Line 10
+			Pseq([~g2, [~b3, ~d4, ~fsharp4], ~d2, [~a3, ~csharp4, ~fsharp4], ~g2, [~b3, ~d4, ~fsharp4], ~d2, [~a3, ~csharp4, ~fsharp4], ~fsharp2, [~a3, ~csharp4, ~fsharp4]], 1), // Line 11
+			Pseq([~b1, [~b3, ~d4, ~fsharp4], ~e2, [~g3, ~b3], ~e2, [~b3, ~d4, ~g4], ~d2, [~f3, ~a3, ~d4], ~a1, [~a3, ~c4, ~e4], ~d2, [~g3, ~b3, ~e4]], 1), // Line 12
+			Pseq([~d2, [~d3, ~g3, ~b3, ~e4], ~d2, [~c3, ~e3, ~a3, ~d4], ~d2, [~c3, ~fsharp3, ~a3, ~d4], ~d2, [~a3, ~c4, ~f4], ~d2, [~a3, ~c4, ~e4]], 1), // Line 13
+			Pseq([~d2, [~d3, ~g3, ~b3, ~e4], ~d2, [~c3, ~e3, ~a3, ~d4], ~d2, [~c3, ~fsharp3, ~a3, ~d4], ~e2, [~b3, ~e4, ~g4], ~e2, [~b3, ~d4, ~f4, ~a4], ~e2, [~b3, ~c4, ~f4]], 1), // Line 14
+			Pseq([~e2, [~c3, ~e3, ~a3], ~e2, [~a3, ~csharp4, ~fsharp4, ~a4], ~e2, [~b2, ~a3, ~d4], [~e3, ~b3, ~d4, ~g4], [~a2, ~g3], [~d2, ~a2, ~b2]], 1)], inf),// Line 15
+	\amp, Pexprand(65,82,inf)/127,
+	\dur, Pseq([
+			Pseq([1/4, 1/2, 1/4, 1/2, 1/4, 1/2, 1/4, 1/2, 1/4, 1/2], 1), // Line 1
+			Pseq([1/4, 1/2, 1/4, 1/2, 1/4, 1/2, 1/4, 1/2, 1/4, 1/2], 1), // Line 2
+			Pseq([1/4, 1/2, 1/4, 1/2, 1/4, 1/2, 1/4, 1/2, 1/4, 1/2], 1), // Line 3
+			Pseq([1/4, 1/2, 1/4, 1/2, 1/4, 1/2, 1/4, 1/2, 1/4, 1/2], 1), // Line 4
+			Pseq([1/4, 1/2, 1/4, 1/2, 1/4, 1/2, 1/4, 1/2, 1/4, 1/2], 1), // Line 5
+		    Pseq([1/4, 1/2, 1/4, 1/2, 1/4, 1/2, 1/4, 1/2, 1/4, 1/2], 1), // Line 6
+			Pseq([1/4, 1/2, 1/4, 1/2, 1/4, 1/2, 1/4, 1/2, 1/4, 1/2], 1), // Line 7
+		   	Pseq([1/4, 1/2, 1/4, 1/4, 1/4, 3/4, 3/4, 1/4, 1/2], 1), //Line 8
+			Pseq([1/4, 1/2, 1/4, 1/2, 1/4, 1/2, 1/4, 1/2, 1/4, 1/2], 1), // Line 9
+			Pseq([1/4, 1/2, 1/4, 1/2, 1/4, 1/2, 1/4, 1/2, 1/4, 1/2, 1/4, 1/2], 1), // Line 10
+			Pseq([1/4, 1/2, 1/4, 1/2, 1/4, 1/2, 1/4, 1/2, 1/4, 1/2], 1), // Line 11
+			Pseq([1/4, 1/2, 1/4, 1/2, 1/4, 1/2, 1/4, 1/2, 1/4, 1/2, 1/4, 1/2], 1), // Line 12
+			Pseq([1/4, 1/2, 1/4, 1/2, 1/4, 1/2, 1/4, 1/2, 1/4, 1/2], 1), // Line 13
+			Pseq([1/4, 1/2, 1/4, 1/2, 1/4, 1/2, 1/4, 1/2, 1/4, 1/2, 1/4, 1/2], 1), // Line 14
+			Pseq([1/4, 1/2, 1/4, 1/2, 1/4, 1/4, 1/4, 3/4, 3/4], 1)], 1), // Line 15
+	\t_trig, 1,
+	\stretch, Pdefn(\stretch2, 2.7272727272727),
+	\attackTime, Pfunc {~attackTime},
+	\decayTime, Pfunc {~decayTime},
+	\sustainLevel, Pfunc {~sustainLevel},
+	\releaseTime, Pfunc {~releaseTime},
+	\whichsigforunison, Pfunc {~whichsigforunison},
+	\width, Pfunc {~pulsewidth},
+	\whichnoise, Pfunc {~whichnoise},
+	\noiseamp, Pfunc {~noiseLevel},
+	\whichunison, Pfunc {~whichunison},
+	\whichlfo1, Pfunc {~whichlfo1},
+	\lfoval1, Pfunc {~lfoval1},
+	\whichlfo2, Pfunc {~whichlfo2},
+	\lfoCycle, Pfunc {~lfoCycle},
+	\lfoFreq1, Pfunc {~lfoFreq1},
+	\lfoFreq2, 2100,
+	\which2, Pfunc {~whichfilter},
+	\freqfilter, Pfunc {~freqfilter},
+	\which3, Pfunc {~whichfilterenv},
+	\cent1, Pfunc {~cent1andcent2},
+	\cent2, Pfunc {~cent1andcent2},
+	\cent3, Pfunc {~cent3andcent4},
+	\cent4, Pfunc {~cent3andcent4},
+	\cent5, Pfunc {~cent5andcent6},
+	\cent6, Pfunc {~cent5andcent6},
+	\cent7, Pfunc {~cent7andcent8},
+	\cent8, Pfunc {~cent7andcent8},
+	\cent9, Pfunc {~cent9andcent10},
+	\cent10, Pfunc {~cent9andcent10},
+	\cent11, Pfunc {~cent11andcent12},
+	\cent12, Pfunc {~cent11andcent12},
+	\cent13, Pfunc {~cent13andcent14},
+	\cent14, Pfunc {~cent13andcent14},
+	\cent15, Pfunc {~cent15andcent16},
+	\cent16, Pfunc {~cent15andcent16},
+	\ampdist, Pfunc {~ampdist},
+	\smooth, Pfunc {~smooth},
+	\whichmainsig, Pfunc {~whichmainsig},
+	\mainamp, Pfunc {~mainamp}, //0.1
+	\out, 0),
+~synthlead = Pbind(
+	\instrument, \unison,
+	\freq, Pseq([
+			Pseq([~fsharp5/**/, ~fsharp5, ~a5], 1), // Line 1
+			Pseq([~g5, ~fsharp5, ~csharp5, ~b4, ~csharp5, ~d5, ~a4, ~fsharp4, ~fsharp4], 1), // Line 2
+			Pseq([~fsharp4, ~fsharp4, ~fsharp5/**/, ~fsharp5, ~a5, ~g5, ~fsharp5, ~csharp5, ~b4, ~csharp5, ~d5], 1), // Line 3
+			Pseq([~a4, ~csharp5, ~fsharp5, ~e4, ~e4], 1), // Line 4
+			Pseq([~e4, ~a4, ~b4, ~c5, ~e5, ~d5, ~b4, ~d5, ~c5, ~b4, ~d5], 1), // Line 5
+			Pseq([~d5, ~d5, ~e5, ~f5, ~g5, ~a5, ~c5, ~d5, ~e5, ~d5, ~b4, ~d5], 1), // Line 6
+			Pseq([~d5, ~d5, ~g5, ~fsharp5, ~b4, ~a4, ~b4, ~csharp5, ~d4, ~e4], 1), // Line 7
+			Pseq([~csharp5, ~d5, ~e5, ~fsharp4, [~c4, ~e4, ~a4, ~c5], [~d4, ~fsharp4, ~a4, ~d5], ~fsharp4/**/], 1), // Line 8
+			Pseq([~fsharp4, ~fsharp4, ~fsharp4, ~fsharp4/**/, ~fsharp5, ~a5, ~g5, ~fsharp5, ~csharp5], 1), // Line 9
+			Pseq([~b4, ~csharp5, ~d5, ~a4, ~fsharp4, ~fsharp4, ~fsharp4, ~fsharp4], 1), // Line 10
+			Pseq([~fsharp4/**/, ~fsharp5, ~a5, ~g5, ~fsharp5, ~csharp5, ~b4, ~csharp5, ~d5, ~a4, ~csharp5], 1), // Line 11
+			Pseq([~fsharp5, ~e4, ~e4, ~e4, ~a4, ~b4, ~c5, ~e5, ~d5, ~b4], 1), // Line 12
+			Pseq([~d5, ~c5, ~b4, ~d5, ~d5, ~d5, ~e5, ~f5, ~g5, ~a5, ~c5, ~d5], 1), // Line 13
+			Pseq([~e5, ~d5, ~b4, ~d5, ~d5, ~d5, ~g5, ~f5, ~b4, ~c5, ~f5], 1), // Line 14
+			Pseq([~e5, ~d5, ~c5, ~e5, ~d5, ~c5, ~f4, [~c4, ~e4, ~a4, ~c5], [~d4, ~f4, ~a4, ~d5]], 1)], 1), // Line 15
+	\amp, Pseq([0, Pwhite(0.7, 0.85, 13), 0, Pwhite(0.7, 0.85, 52), 0, 0, 0, 0, 0, Pwhite(0.7, 0.85, 13), 0, Pwhite(0.7, 0.85, 52)], inf),
+	\dur, Pseq([
+			Pseq([13/4, 1/4, 1/4], 1), // Line 1
+			Pseq([1/4, 1/4, 1/4, 1/4, 1/4, 1/4, 3/4, 3/4, 3/4], 1), // Line 2
+			Pseq([3/4, 3/4, 1/4, 1/4, 1/4, 1/4, 1/4, 1/4, 1/4, 1/4, 1/4], 1), // Line 3
+			Pseq([3/4, 3/4, 3/4, 3/4, 3/4], 1), // Line 4
+			Pseq([3/4, 1/4, 1/4, 1/4, 1/4, 1/4, 1/4, 1/4, 1/4, 1/4, 3/4], 1), // Line 5
+			Pseq([1/2, 1/4, 1/4, 1/4, 1/4, 1/4, 1/4, 1/4, 1/4, 1/4, 1/4, 3/4], 1), // Line 6
+			Pseq([1/2, 1/4, 3/4, 3/4, 1/4, 1/4, 1/4, 1/4, 1/4, 1/4], 1), // Line 7
+			Pseq([1/4, 1/4, 1/4, 3/4, 3/4, 3/4, 3/4], 1), // Line 8
+			Pseq([3/4, 3/4, 3/4, 1/4, 1/4, 1/4, 1/4, 1/4, 1/4], 1), // Line 9
+			Pseq([1/4, 1/4, 1/4, 3/4, 3/4, 3/4, 3/4, 3/4], 1), // Line 10
+			Pseq([1/4, 1/4, 1/4, 1/4, 1/4, 1/4, 1/4, 1/4, 1/4, 3/4, 3/4], 1), // Line 11
+			Pseq([3/4, 3/4, 3/4, 3/4, 1/4, 1/4, 1/4, 1/4, 1/4, 1/4], 1), // Line 12
+			Pseq([1/4, 1/4, 1/4, 3/4, 1/2, 1/4, 1/4, 1/4, 1/4, 1/4, 1/4, 1/4], 1), // Line 13
+			Pseq([1/4, 1/4, 1/4, 3/4, 1/2, 1/4, 3/4, 3/4, 1/4, 1/4, 1/4], 1), // Line 14
+			Pseq([1/4, 1/4, 1/4, 1/4, 1/4, 1/4, 3/4, 3/4, 3/4], 1)], 1), // Line 15
+	\t_trig, 1,
+	\stretch, Pdefn(\stretch2, 2.7272727272727),
+	\attackTime, Pfunc {~attackTimeL},
+	\decayTime, Pfunc {~decayTimeL},
+	\sustainLevel, Pfunc {~sustainLevelL},
+	\releaseTime, Pfunc {~releaseTimeL},
+	\whichsigforunison, Pfunc {~whichsigforunisonL},
+	\width, Pfunc {~pulsewidthL},
+	\whichnoise, Pfunc {~whichnoiseL},
+	\noiseamp, Pfunc {~noiseLevelL},
+	\whichunison, Pfunc {~whichunisonL},
+	\whichlfo1, Pfunc {~whichlfo1L},
+	\lfoval1, Pfunc {~lfoval1L},
+	\whichlfo2, Pfunc {~whichlfo2L},
+	\lfoCycle, Pfunc {~lfoCycleL},
+	\lfoFreq1, Pfunc {~lfoFreq1L},
+	\lfoFreq2, 2100,
+	\which2, Pfunc {~whichfilterL},
+	\freqfilter, Pfunc {~freqfilterL},
+	\which3, Pfunc {~whichfilterenvL},
+	\cent1, Pfunc {~cent1andcent2L},
+	\cent2, Pfunc {~cent1andcent2L},
+	\cent3, Pfunc {~cent3andcent4L},
+	\cent4, Pfunc {~cent3andcent4L},
+	\cent5, Pfunc {~cent5andcent6L},
+	\cent6, Pfunc {~cent5andcent6L},
+	\cent7, Pfunc {~cent7andcent8L},
+	\cent8, Pfunc {~cent7andcent8L},
+	\cent9, Pfunc {~cent9andcent10L},
+	\cent10, Pfunc {~cent9andcent10L},
+	\cent11, Pfunc {~cent11andcent12L},
+	\cent12, Pfunc {~cent11andcent12L},
+	\cent13, Pfunc {~cent13andcent15L},
+	\cent14, Pfunc {~cent13andcent15L},
+	\cent15, Pfunc {~cent15andcent16L},
+	\cent16, Pfunc {~cent15andcent16L},
+	\ampdist, Pfunc {~ampdistL},
+	\smooth, Pfunc {~smoothL},
+	\whichmainsig,  Pfunc {~whichmainsigL},
+	\mainamp, Pfunc {~mainampL}, //0.05
+	\out, 2,
+)]);
+)
+
+
+
+s.freqscope;
+
+
+
+(
+
+~ambientsynth = [
+	\attackTime, [0.01, 2.5, \lin, 0.01, 2.5],
+	\decayTime, [0.05, 0.50, \lin, 0.05, 0.50],
+	\sustainLevel, [0.05, 0.50, \lin, 0.05, 0.50],
+	\releaseTime, [0.01, 2.5, \lin, 0.01, 2.5],
+	\whichsigforunison, [0, 1, \lin, 0, 1],
+	\whichunison, [0, 3, \lin, 1, 4],
+	\pulsewidth, [0.1, 0.9, \lin, 0.1, 0.9],
+	\whichnoise, [0, 4, \lin, 1, 5],
+	\noiseLevel, [0.1, 1.0, \lin, 0.1, 1.0],
+	\whichlfo1, [0, 4, \lin, 1, 5],
+	\lfoval1, [0.1, 5, \lin, 0.1, 5],
+	\whichlfo2, [0, 3, \lin, 1, 4],
+	\lfoCycle, [0.1, 5, \lin, 0.1, 5],
+	\lfoFreq1, [100, 2000, \lin, 100, 2000],
+	\whichfilter, [0, 3, \lin, 1, 4],
+	\freqfilter, [100, 5000, \lin, 100, 5000],
+	\whichfilterenv, [0, 3, \lin, 1, 4],
+	\cent1andcent2,  [2, 9, \lin, 1, 7],b
+	\cent3andcent4, [10, 22, \lin, 1, 12],
+	\cent5andcent6, [23, 30, \lin, 1, 7],
+	\cent7andcent8, [31, 42, \lin, 1, 11],
+	\cent9andcent10, [43, 50, \lin, 1, 7],
+	\cent11andcent12, [51, 62, \lin, 1, 11],
+	\cent13andcent14, [63, 80, \lin, 1, 17],
+	\cent15andcent16, [81, 95, \lin, 1, 14],
+	\ampdist, [0.1, 0.9, \lin, 0.1, 0.9],
+	\smooth, [0.1, 0.9, \lin, 0.1, 0.9],
+	\whichmainsig, [0, 4, \lin, 1, 5],
+	\mainamp, [0.01, 1.0, \lin, 0.01, 1.0],
+	\void, [0, 0, \lin, 0, 0],
+	\void0, [0, 0, \lin, 0, 0],
+	\void00, [0, 0, \lin, 0, 0],
+	\attackTimeL, [0.01, 2.5, \lin, 0.01, 2.5],
+	\decayTimeL, [0.05, 0.50, \lin, 0.05, 0.50],
+	\sustainLevelL, [0.05, 0.50, \lin, 0.05, 0.50],
+	\releaseTimeL, [0.01, 2.5, \lin, 0.01, 2.5],
+	\whichsigforunisonL, [0, 1, \lin, 0, 1],
+	\whichunisonL, [0, 3, \lin, 1, 4],
+	\pulsewidthL, [0.1, 0.9, \lin, 0.1, 0.9],
+	\whichnoiseL, [0, 4, \lin, 0, 4],
+	\noiseLevelL, [0.1, 1.0, \lin, 0.1, 1.0],
+	\whichlfo1L, [0, 4, \lin, 1, 5],
+	\lfoval1L, [0.1, 5, \lin, 0.1, 5],
+	\whichlfo2L, [0, 3, \lin, 1, 4],
+	\lfoCycleL, [0.1, 5, \lin, 0.1, 5],
+	\lfoFreq1L, [100, 2000, \lin, 100, 2000],
+	\whichfilterL, [0, 3, \lin, 1, 4],
+	\freqfilterL, [100, 5000, \lin, 100, 5000],
+	\whichfilterenvL, [0, 3, \lin, 1, 4],
+	\cent1andcent2L, [2, 9, \lin, 1, 7],
+	\cent3andcent4L, [10, 22, \lin, 1, 12],
+	\cent5andcent6L, [23, 30, \lin, 1, 7],
+	\cent7andcent8L, [31, 42, \lin, 1, 11],
+	\cent9andcent10L, [43, 50, \lin, 1, 7],
+	\cent11andcent12L, [51, 62, \lin, 1, 11],
+	\cent13andcent15L, [63, 80, \lin, 1, 17],
+	\cent15andcent16L, [81, 95, \lin, 1, 14],
+	\ampdistL, [0.1, 0.9, \lin, 0.1, 0.9],
+	\smoothL, [0.1, 0.9, \lin, 0.1, 0.9],
+	\whichmainsigL, [0, 4, \lin, 1, 5],
+	\mainampL, [0.01, 1.0, \lin, 0.01, 1.0]
+];
+)
+
+
+~varGui = VarGui(~ambientsynth, stream:~gymno1).gui(sliderHeight: 12.35, sliderWidth:430, labelWidth: 80, font: "Futura", sliderFontHeight: 9);
+
+
+
