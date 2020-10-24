@@ -1,0 +1,471 @@
+
+Server.killAll;
+s.boot;
+
+(
+SynthDef.new(\basicwaveforms, {
+ arg freq=65.41, amp, width, which, t_trig = 0;
+ var env, selectsig;
+
+ env = EnvGen.kr(Env([0,1,0], [0.01, 600]), t_trig);
+
+ // SIGNAL SELECTION MODULE
+ selectsig = Select.ar(which, [DC.ar(0), SinOsc.ar(freq, 0, amp), Saw.ar(freq, amp), Pulse.ar(freq, width, amp), LFTri.ar(freq, 0, amp)]);
+
+ Out.ar(0, env*selectsig.dup);
+}).add;
+)
+
+
+
+~waveforms = Synth.new(\basicwaveforms, [\freq, 65.41, \amp, 0.1, \which, 1, \width, 0.5, \t_trig, 0]).register;
+
+
+
+// TEST
+~waveforms.set(\t_trig, 1);
+~waveforms.set(\amp, 0.5);
+
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+// GRAPHICAL USER INTERFACE (GUI) SETUP
+
+
+
+(
+// MAIN WINDOW
+w = Window.new(".", Rect.new(0, 0, 700, 605));
+w.front;
+w.alwaysOnTop_(true);
+w.view.background_(Color.fromHexString("#97CADB"));
+
+
+
+// TITLE HEADER
+~header = StaticText(w, Rect(255, 5, 750, 200))
+.string_("Basic Waveforms")
+.font_(Font("Trattatello", 90))
+.align_(\center)
+.background_(Color.fromHexString("#97CADB"));
+
+
+
+// WINDOW FOR SLIDERS
+c = CompositeView(w, Rect(550, 250, 325, 240))
+.background_(Color.fromHexString("#02457A"));
+
+
+
+// FREQUENCY SLIDER
+~freqslider = Slider.new(c, Rect.new(50,30,150,20))
+.background_(Color.fromHexString("#97CADB"))
+.thumbSize_(10)
+.knobColor_(Color.fromHexString("#97CADB"))
+.action_({
+ arg obj;
+ var cf;
+ cf = obj.value.linexp(0,1,50,16000).postln;
+ if(
+  ~waveforms.isPlaying,
+  {~waveforms.set(\freq, cf)};
+ );
+  ~freqnumberBox.value_(obj.value.linexp(0,1,50,16000));
+});
+
+
+
+// AMPLITUDE SLIDER
+~ampslider = Slider.new(c, Rect.new(50,100,150,20))
+.background_(Color.fromHexString("#97CADB"))
+.thumbSize_(10)
+.knobColor_(Color.fromHexString("#97CADB"))
+.action_({
+ arg obj;
+ var cf;
+ cf = obj.value.linexp(0,1,0.01,1.0).postln;
+ if(
+  ~waveforms.isPlaying,
+  {~waveforms.set(\amp, cf)};
+ );
+  ~ampnumberBox.value_(obj.value.linexp(0,1,0.1,1.0));
+});
+
+
+
+// PULSE WIDTH SLIDER
+~pulsewidthslider = Slider.new(c, Rect.new(50,170,150,20))
+.background_(Color.fromHexString("#97CADB"))
+.thumbSize_(10)
+.knobColor_(Color.fromHexString("#97CADB"))
+.action_({
+ arg obj;
+ var cf;
+ cf = obj.value.linexp(0,1,0.1,0.9).postln;
+ if(
+  ~waveforms.isPlaying,
+  {~waveforms.set(\width, cf)};
+ );
+ ~pwnumberBox.value_(obj.value.linexp(0,1,0.1,0.9));
+});
+
+
+
+// FREQUENCY VALUE BOX
+~freqnumberBox = NumberBox(c, Rect(230, 30, 55, 20))
+.value_(40)
+.clipLo_(50)
+.clipHi_(16000)
+.font_(Font("Futura", 16))
+.decimals_(0)
+.action_({
+ arg obj;
+ ~freqslider.valueAction_(obj.value.explin(50,16000,0,1))
+});
+
+
+
+// AMPLITUDE VALUE BOX
+~ampnumberBox = NumberBox(c, Rect(230, 100, 55, 20))
+.value_(0.01)
+.clipLo_(0.1)
+.clipHi_(1.0)
+.font_(Font("Futura", 16))
+.decimals_(2)
+.action_({
+ arg obj;
+ ~ampslider.valueAction_(obj.value.explin(0,1,0.01,1.0))
+});
+
+
+
+// PULSE WIDTH VALUE BOX
+~pwnumberBox = NumberBox(c, Rect(230, 170, 55, 20))
+.value_(0.1)
+.clipLo_(0.1)
+.clipHi_(1.0)
+.font_(Font("Futura", 16))
+.decimals_(1)
+.action_({
+ arg obj;
+ ~pulsewidthslider.valueAction_(obj.value.explin(0,1,0.1,0.9))
+});
+
+
+
+// TEXT HEADERS
+// FREQUENCY HEADER
+~freqLabel = StaticText(c, Rect(90, 60, 80, 20))
+.string_("Frequency")
+.stringColor_(Color.fromHexString("#97CADB"))
+.font_(Font("Futura", 14))
+.align_(\center);
+
+
+
+// AMPLITUDE HEADER
+~ampLabel = StaticText(c, Rect(90, 130, 80, 20))
+.string_("Amplitude")
+.stringColor_(Color.fromHexString("#97CADB"))
+.font_(Font("Futura", 14))
+.align_(\center);
+
+
+
+// PULSE WIDTH HEADER
+~pwLabel = StaticText(c, Rect(90, 200, 80, 20))
+.string_("Pulse Width")
+.stringColor_(Color.fromHexString("#97CADB"))
+.font_(Font("Futura", 14))
+.align_(\center);
+
+
+
+// WINDOW FOR BUTTONS
+d = CompositeView(w, Rect(400, 250, 120, 240))
+.background_(Color.fromHexString("#02457A"));
+
+
+
+// BUTTON FOR SIGNAL SELECTION
+~whichbutton1 = Button(d, Rect(20, 100, 80, 40))
+.states_([
+ ["OFF", Color.white, Color(0.0, 0.0, 0.0)],
+    ["sine", Color.white, Color.fromHexString("#97CADB")],
+    ["saw", Color.white, Color.fromHexString("#97CADB")],
+ ["pulse", Color.white, Color.fromHexString("#97CADB")],
+ ["triangle", Color.white, Color.fromHexString("#97CADB")]
+])
+.font_(Font("Futura", 18))
+.action_({
+ arg obj;
+ ~waveforms.set(\which, obj.value);
+});
+
+
+
+// BUTTON FOR LOADING THE SYNTH ON THE SERVER
+~button = Button(d, Rect(20, 30, 80, 40))
+.states_([
+ ["LOAD", Color.white, Color(0.0, 0.0, 0.0)],
+ ["LOADED", Color.white, Color.fromHexString("#97CADB")]
+])
+.font_(Font("Futura", 18))
+.action_({
+ arg obj;
+ if(
+  obj.value == 1,
+  {
+   ~waveforms = Synth.new(\basicwaveforms, [\freq, 50.00, \amp, 0.01, \which, 0, \width, 0.1, \t_trig, 0]).register;
+ },
+  {~waveforms.free}
+ )
+});
+
+
+
+// BUTTON FOR TURNING ON/OFF THE SYNTH
+~button2 = Button(d, Rect(20, 170, 80, 40))
+.states_([
+ ["OFF", Color.white, Color(0.0, 0.0, 0.0)],
+ ["ON", Color.white, Color.fromHexString("#97CADB")]
+])
+.font_(Font("Futura", 18))
+.action_({
+ arg obj;
+ if(
+  obj.value == 1,
+  {
+   ~waveforms.set(\t_trig, 1);
+ },
+  {~waveforms.free}
+ )
+});
+
+
+
+~headerplotsine = StaticText(w, Rect(445, 520, 450, 50))
+.string_("PLOTTING EXAMPLES")
+.font_(Font("Futura", 20))
+.align_(\center)
+.background_(Color.fromHexString("#97CADB"));
+
+
+
+~plot1 = Button(w, Rect(400, 600, 80, 40))
+.states_([
+ ["SINE WAVE 1", Color.white, Color(0.0, 0.0, 0.0)],
+ ["SINE WAVE 1", Color.white, Color.fromHexString("#02457A")]
+])
+.font_(Font("Futura", 10))
+.action_({
+ arg obj;
+ if(
+  obj.value == 1,
+  {
+   {SinOsc.ar(100, 0, 1.0)}.plot(bounds:Rect(1300, 0, 480, 500));
+ })
+});
+
+
+~plot2 = Button(w, Rect(400, 650, 80, 40))
+.states_([
+ ["SINE WAVE 2", Color.white, Color(0.0, 0.0, 0.0)],
+ ["SINE WAVE 2", Color.white, Color.fromHexString("#02457A")]
+])
+.font_(Font("Futura", 10))
+.action_({
+ arg obj;
+ if(
+  obj.value == 1,
+  {
+   {SinOsc.ar(500, 0, 1.0)}.plot(bounds:Rect(1300, 0, 480, 500));
+ })
+});
+
+
+~plot3 = Button(w, Rect(400, 700, 80, 40))
+.states_([
+ ["SINE WAVE 3", Color.white, Color(0.0, 0.0, 0.0)],
+ ["SINE WAVE 3", Color.white, Color.fromHexString("#02457A")]
+])
+.font_(Font("Futura", 10))
+.action_({
+ arg obj;
+ if(
+  obj.value == 1,
+  {
+   {SinOsc.ar(1500, 0, 1.0)}.plot(bounds:Rect(1300, 0, 480, 500));
+ })
+});
+
+
+
+~plot4 = Button(w, Rect(550, 600, 80, 40))
+.states_([
+ ["SAW WAVE 1", Color.white, Color(0.0, 0.0, 0.0)],
+ ["SAW WAVE 1", Color.white, Color.fromHexString("#02457A")]
+])
+.font_(Font("Futura", 10))
+.action_({
+ arg obj;
+ if(
+  obj.value == 1,
+  {
+   {Saw.ar(300, 1.0)}.plot(bounds:Rect(1300, 0, 480, 500));
+ })
+});
+
+
+
+~plot5 = Button(w, Rect(550, 650, 80, 40))
+.states_([
+ ["SAW WAVE 2", Color.white, Color(0.0, 0.0, 0.0)],
+ ["SAW WAVE 2", Color.white, Color.fromHexString("#02457A")]
+])
+.font_(Font("Futura", 10))
+.action_({
+ arg obj;
+ if(
+  obj.value == 1,
+  {
+   {Saw.ar(1200, 1.0)}.plot(bounds:Rect(1300, 0, 480, 500));
+ })
+});
+
+
+
+~plot6 = Button(w, Rect(550, 700, 80, 40))
+.states_([
+ ["SAW WAVE 3", Color.white, Color(0.0, 0.0, 0.0)],
+ ["SAW WAVE 3", Color.white, Color.fromHexString("#02457A")]
+])
+.font_(Font("Futura", 10))
+.action_({
+ arg obj;
+ if(
+  obj.value == 1,
+  {
+   {Saw.ar(2500, 1.0)}.plot(bounds:Rect(1300, 0, 480, 500));
+ })
+});
+
+
+
+~plot7 = Button(w, Rect(700, 600, 80, 40))
+.states_([
+ ["PULSE WAVE 1", Color.white, Color(0.0, 0.0, 0.0)],
+ ["PULSE WAVE 1", Color.white, Color.fromHexString("#02457A")]
+])
+.font_(Font("Futura", 10))
+.action_({
+ arg obj;
+ if(
+  obj.value == 1,
+  {
+   {Pulse.ar(300, 0.5, 1.0)}.plot(bounds:Rect(1300, 0, 480, 500));
+ })
+});
+
+
+
+~plot8 = Button(w, Rect(700, 650, 80, 40))
+.states_([
+ ["PULSE WAVE 2", Color.white, Color(0.0, 0.0, 0.0)],
+ ["PULSE WAVE 2", Color.white, Color.fromHexString("#02457A")]
+])
+.font_(Font("Futura", 10))
+.action_({
+ arg obj;
+ if(
+  obj.value == 1,
+  {
+   {Pulse.ar(1200, 0.5, 1.0)}.plot(bounds:Rect(1300, 0, 480, 500));
+ })
+});
+
+
+
+~plot9 = Button(w, Rect(700, 700, 80, 40))
+.states_([
+ ["PULSE WAVE 3", Color.white, Color(0.0, 0.0, 0.0)],
+ ["PULSE WAVE 3", Color.white, Color.fromHexString("#02457A")]
+])
+.font_(Font("Futura", 10))
+.action_({
+ arg obj;
+ if(
+  obj.value == 1,
+  {
+   {Pulse.ar(500, 0.1, 1.0)}.plot(bounds:Rect(1300, 0, 480, 500));
+ })
+});
+
+
+
+~plot10 = Button(w, Rect(850, 600, 80, 40))
+.states_([
+ ["TRIANGLE WAVE 1", Color.white, Color(0.0, 0.0, 0.0)],
+ ["TRIANGLE WAVE 1", Color.white, Color.fromHexString("#02457A")]
+])
+.font_(Font("Futura", 8))
+.action_({
+ arg obj;
+ if(
+  obj.value == 1,
+  {
+   {LFTri.ar(300, 0.5, 1.0)}.plot(bounds:Rect(1300, 0, 480, 500));
+ })
+});
+
+
+
+~plot11 = Button(w, Rect(850, 650, 80, 40))
+.states_([
+ ["TRIANGLE WAVE 2", Color.white, Color(0.0, 0.0, 0.0)],
+ ["TRIANGLE WAVE 2", Color.white, Color.fromHexString("#02457A")]
+])
+.font_(Font("Futura", 8))
+.action_({
+ arg obj;
+ if(
+  obj.value == 1,
+  {
+   {LFTri.ar(1200, 0.5, 1.0)}.plot(bounds:Rect(1300, 0, 480, 500));
+ })
+});
+
+
+
+~plot11 = Button(w, Rect(850, 700, 80, 40))
+.states_([
+ ["TRIANGLE WAVE 3", Color.white, Color(0.0, 0.0, 0.0)],
+ ["TRIANGLE WAVE 3", Color.white, Color.fromHexString("#02457A")]
+])
+.font_(Font("Futura", 8))
+.action_({
+ arg obj;
+ if(
+  obj.value == 1,
+  {
+   {LFTri.ar(2500, 0.5, 1.0)}.plot(bounds:Rect(1300, 0, 480, 500));
+ })
+});
+
+
+
+// OSCILLOSCOPE
+s.scope(numChannels: 2);
+
+
+
+// FREQUENCY ANALYZER
+FreqScope.new(400, 450, 0, server: s);
+)
